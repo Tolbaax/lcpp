@@ -23,6 +23,11 @@ DART_API void llama_llm_stop(void);
 
 DART_API void llama_llm_free(void);
 
+// New embedding functions
+DART_API float * llama_get_embedding(char * text, int * embedding_size);
+
+DART_API void llama_free_embedding(float * embedding);
+
 #ifdef __cplusplus
 }
 #endif

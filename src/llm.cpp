@@ -201,3 +201,54 @@ void llama_llm_free(void) {
     llama_free(ctx);
     llama_free_model(model);
 }
+
+float * llama_get_embedding(char * text, int * embedding_size) {
+    assert(model != nullptr);
+    assert(ctx != nullptr);
+
+    std::lock_guard<std::mutex> lock(continue_mutex);
+
+    // Get the vocabulary
+    auto vocab = llama_model_get_vocab(model);
+
+    // Tokenize the input text
+    const bool add_bos = true;
+    const int n_tokens = -llama_tokenize(vocab, text, strlen(text), NULL, 0, add_bos, true);
+    std::vector<llama_token> tokens(n_tokens);
+    if (llama_tokenize(vocab, text, strlen(text), tokens.data(), tokens.size(), add_bos, true) < 0) {
+        fprintf(stderr, "failed to tokenize the input text\n");
+        return nullptr;
+    }
+
+    // Prepare batch for embedding
+    llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
+
+    // Get embeddings
+    if (llama_decode(ctx, batch)) {
+        fprintf(stderr, "failed to decode and get embeddings\n");
+        return nullptr;
+    }
+
+    // Get embedding dimensions
+    const int n_embd = llama_n_embd(model);
+    *embedding_size = n_embd;
+
+    // Allocate memory for embeddings
+    float * embedding = (float *)malloc(n_embd * sizeof(float));
+    if (embedding == nullptr) {
+        fprintf(stderr, "failed to allocate memory for embeddings\n");
+        return nullptr;
+    }
+
+    // Get the embeddings from the last layer
+    const float * embeddings = llama_get_embeddings(ctx);
+    memcpy(embedding, embeddings, n_embd * sizeof(float));
+
+    return embedding;
+}
+
+void llama_free_embedding(float * embedding) {
+    if (embedding != nullptr) {
+        free(embedding);
+    }
+}

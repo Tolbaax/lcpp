@@ -69,6 +69,33 @@ class llama {
   late final _llama_llm_freePtr =
       _lookup<ffi.NativeFunction<ffi.Void Function()>>('llama_llm_free');
   late final _llama_llm_free = _llama_llm_freePtr.asFunction<void Function()>();
+
+  // New embedding functions
+  ffi.Pointer<ffi.Float> llama_get_embedding(
+    ffi.Pointer<ffi.Char> text,
+    ffi.Pointer<ffi.Int> embedding_size,
+  ) {
+    return _llama_get_embedding(text, embedding_size);
+  }
+
+  late final _llama_get_embeddingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Float> Function(
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Int>)>>('llama_get_embedding');
+  late final _llama_get_embedding = _llama_get_embeddingPtr.asFunction<
+      ffi.Pointer<ffi.Float> Function(
+          ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Int>)>();
+
+  void llama_free_embedding(ffi.Pointer<ffi.Float> embedding) {
+    return _llama_free_embedding(embedding);
+  }
+
+  late final _llama_free_embeddingPtr = _lookup<
+      ffi.NativeFunction<void Function(ffi.Pointer<ffi.Float>)>>(
+    'llama_free_embedding',
+  );
+  late final _llama_free_embedding = _llama_free_embeddingPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Float>)>();
 }
 
 typedef dart_output
